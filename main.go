@@ -106,6 +106,11 @@ func deleteBook(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(books)
 }
 
+// Index route "/"
+func index(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "Hello, world!")
+}
+
 func main() {
 
 	// Init Router
@@ -117,6 +122,7 @@ func main() {
 	books = append(books, Book{ID: "3", Isbn: "45243", Title: "Book Three", Author: &Author{Firstname: "Ray", Lastname: "Smith"}})
 
 	// Route Handlers / Endpoints
+	r.HandleFunc("/", index)
 	r.HandleFunc("/api/books", getBooks).Methods("GET")
 	r.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	r.HandleFunc("/api/books", createBook).Methods("POST")
