@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -68,13 +69,41 @@ func createBook(w http.ResponseWriter, r *http.Request) {
 // Update Book
 func updateBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
+	params := mux.Vars(r)
+	// Loop through books and find book with ID
+	for index, book := range books {
+		if book.ID == params["id"] {
+			// delete book, filter out book
+			books = append(books[:index], books[index+1:]...)
+			var updatedBook Book
+			err := json.NewDecoder(r.Body).Decode(&updatedBook)
+			if err != nil {
+				log.Fatalln("There was an error decoding the request body into the struct")
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			updatedBook.ID = params["id"]
+			books = append(books, updatedBook)
+			json.NewEncoder(w).Encode(updatedBook)
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(books)
 }
 
 // Delete Book
 func deleteBook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-
+	params := mux.Vars(r)
+	// Loop through books and find book with ID
+	for index, book := range books {
+		if book.ID == params["id"] {
+			// delete book, filter out book
+			books = append(books[:index], books[index+1:]...)
+			break
+		}
+	}
+	json.NewEncoder(w).Encode(books)
 }
 
 func main() {
@@ -89,9 +118,10 @@ func main() {
 
 	// Route Handlers / Endpoints
 	r.HandleFunc("/api/books", getBooks).Methods("GET")
-	r.HandleFunc("/api/book/{id}", getBook).Methods("GET")
+	r.HandleFunc("/api/books/{id}", getBook).Methods("GET")
 	r.HandleFunc("/api/books", createBook).Methods("POST")
 	r.HandleFunc("/api/books/{id}", updateBook).Methods("PUT")
 	r.HandleFunc("/api/books/{id}", deleteBook).Methods("DELETE")
+	fmt.Println("Server starting...")
 	log.Fatal(http.ListenAndServe(":8000", r))
 }
