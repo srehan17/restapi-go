@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
+	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -25,19 +27,42 @@ type Author struct {
 var books []Book
 
 // Get All Books
-func getBooks(w http.ResponseWriter, r *http.Request) {
+func getBooks(w http.ResponseWriter, r *http.Request) { // w is writer, r is request
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(books)
+	err := json.NewEncoder(w).Encode(books)
+	if err != nil {
+		log.Fatalln("There was an error encoding the initialized struct")
+	}
 }
 
 // Get Single Book
 func getBook(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	params := mux.Vars(r)
+	// Loop through books and find book with ID
+	for _, book := range books {
+		if book.ID == params["id"] {
+			err := json.NewEncoder(w).Encode(book)
+			if err != nil {
+				log.Fatalln("There was an error encoding the initialized struct")
+			}
+			return
+		}
+	}
+	json.NewEncoder(w).Encode(&Book{})
 }
 
 // Create a New Book
 func createBook(w http.ResponseWriter, r *http.Request) {
-
+	w.Header().Set("Content-Type", "application/json")
+	var book Book
+	err := json.NewDecoder(r.Body).Decode(&book)
+	if err != nil {
+		log.Fatalln("There was an error decoding the request body into the struct")
+	}
+	book.ID = strconv.Itoa(rand.Intn(10000000)) // ID just for example, this can generate the same id twice, so not to be used in production
+	books = append(books, book)
+	json.NewEncoder(w).Encode(book)
 }
 
 // Update Book
